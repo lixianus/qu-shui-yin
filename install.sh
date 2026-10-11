@@ -1,27 +1,26 @@
 #!/bin/bash
-
 # ==========================================
-# 智能交互自引导机制：防止管道符导致 read 输入失效
+# 终极防崩溃自引导：自动抵抗 Windows 换行符并接管终端
 # ==========================================
-if [ ! -t 0 ]; then
-    # 如果检测到是以管道（curl | sh）方式运行，自动下载到本地并用真实终端重新执行
-    SCRIPT_URL="https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh"
-    TEMP_SCRIPT="/tmp/install_qsy.sh"
-    
-    echo "[+] 正在引导进入平稳交互终端..."
-    curl -sL "$SCRIPT_URL" -o "$TEMP_SCRIPT" 2>/dev/null || wget -q "$SCRIPT_URL" -O "$TEMP_SCRIPT" 2>/dev/null
-    
-    # 兼容处理：消除可能存在的 Windows 换行符
-    if command -v dos2unix &> /dev/null; then
-        dos2unix "$TEMP_SCRIPT" >/dev/null 2>&1
-    else
-        tr -d '\r' < "$TEMP_SCRIPT" > "${TEMP_SCRIPT}.fixed" && mv "${TEMP_SCRIPT}.fixed" "$TEMP_SCRIPT"
+if [ -t 0 ] && [ -z "$_QSY_RE-EXEC" ]; then
+    # 如果当前终端有输入权限且未重定向，检查并自洁换行符
+    if grep -q -U $'\r' "$0" 2>/dev/null || file "$0" 2>/dev/null | grep -q "CRLF"; then
+        export _QSY_RE-EXEC=1
+        tr -d '\r' < "$0" > "$0.clean" && exec bash "$0.clean" "$@"
     fi
-    
-    chmod +x "$TEMP_SCRIPT"
-    exec bash "$TEMP_SCRIPT" < /dev/tty
+elif [ ! -t 0 ]; then
+    # 如果是通过 curl | bash 或管道运行，自动下载到临时文件清洗并转入真实终端
+    _TEMP_SH="/tmp/qsy_install_$$.sh"
+    curl -sL "https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh" -o "$_TEMP_SH" 2>/dev/null || wget -q "https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh" -O "$_TEMP_SH" 2>/dev/null
+    tr -d '\r' < "$_TEMP_SH" > "${_TEMP_SH}.clean"
+    chmod +x "${_TEMP_SH}.clean"
+    exec bash "${_TEMP_SH}.clean" < /dev/tty
     exit 0
 fi
+
+# ==========================================
+# 正式安装逻辑开始
+# ==========================================
 
 # 确保以 root 权限运行
 if [ "$EUID" -ne 0 ]; then

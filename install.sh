@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# ==========================================
+# 终极防崩溃自引导：自动抵抗 Windows 换行符并接管终端
+# ==========================================
+if [ -t 0 ] && [ -z "$_QSY_RE-EXEC" ]; then
+    if grep -q -U $'\r' "$0" 2>/dev/null || file "$0" 2>/dev/null | grep -q "CRLF"; then
+        export _QSY_RE-EXEC=1
+        tr -d '\r' < "$0" > "$0.clean" && exec bash "$0.clean" "$@"
+    fi
+elif [ ! -t 0 ]; then
+    _TEMP_SH="/tmp/qsy_install_$$.sh"
+    curl -sL "https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh" -o "$_TEMP_SH" 2>/dev/null || wget -q "https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh" -O "$_TEMP_SH" 2>/dev/null
+    tr -d '\r' < "$_TEMP_SH" > "${_TEMP_SH}.clean"
+    chmod +x "${_TEMP_SH}.clean"
+    exec bash "${_TEMP_SH}.clean" < /dev/tty
+    exit 0
+fi
+
 # 确保以 root 权限运行
 if [ "$EUID" -ne 0 ]; then
   echo "[-] 请使用 root 权限运行此脚本 (例如: sudo bash 或切换 root)"
@@ -63,7 +80,7 @@ install_main() {
     # 5. 交互式输入绑定域名（用于防封和直接访问）
     echo ""
     echo "--------------------------------------------------"
-    echo "请输入绑定的解析域名 (例如: parse.yourdomain.com)"
+    echo "请输入绑定的解析域名 (例如: qsy.keaiduo.kdns.fr)"
     echo "（注：需确保该域名已托管在 Cloudflare 账号下）"
     echo "--------------------------------------------------"
     read -p "请输入你的绑定域名: " CUSTOM_DOMAIN
@@ -106,12 +123,12 @@ networks:
     driver: bridge
 DOCKEREOF
 
-    # 7. 拉取镜像并启动
+    # 7. 拉取镜像并启动（使用强制重建确保隧道容器顺利激活）
     echo "[+] 正在拉取 Docker 镜像并启动服务..."
     docker compose down 2>/dev/null || docker-compose down 2>/dev/null
-    docker compose up -d 2>/dev/null || docker-compose up -d 2>/dev/null
+    docker compose up -d --force-recreate 2>/dev/null || docker-compose up -d --force-recreate 2>/dev/null
 
-    # 8. 创建全局快捷命令 qsy
+    # 8. 创建增强版全局快捷命令 qsy（内置一键修复与日志排查菜单）
     cat << 'EOF' > /usr/local/bin/qsy
 #!/bin/bash
 WORK_DIR="/opt/parse-video"
@@ -122,13 +139,14 @@ while true; do
     echo "=================================================="
     echo " 1. 查看容器运行状态 (docker ps)"
     echo " 2. 查看实时运行日志 (Logs)"
-    echo " 3. 更新解析项目 (Update to Latest)"
-    echo " 4. 重启服务 (Restart)"
-    echo " 5. 停止服务 (Stop)"
-    echo " 6. 卸载并清理全部配置 (Uninstall)"
+    echo " 3. 一键强制重建并修复隧道 (Force Recreate Containers)"
+    echo " 4. 更新解析项目 (Update to Latest)"
+    echo " 5. 重启服务 (Restart)"
+    echo " 6. 停止服务 (Stop)"
+    echo " 7. 卸载并清理全部配置 (Uninstall)"
     echo " 0. 退出菜单"
     echo "=================================================="
-    read -p "请输入选项 [0-6]: " menu_choice
+    read -p "请输入选项 [0-7]: " menu_choice
     case $menu_choice in
         1)
             docker ps -a --filter name=parse-video --filter name=cloudflared
@@ -139,6 +157,14 @@ while true; do
             cd "$WORK_DIR" && (docker compose logs -f 2>/dev/null || docker-compose logs -f)
             ;;
         3)
+            echo "[+] 正在清理并强制重新创建容器（解决隧道未启动问题）..."
+            cd "$WORK_DIR" || exit
+            docker compose down 2>/dev/null || docker-compose down 2>/dev/null
+            docker compose up -d --force-recreate 2>/dev/null || docker-compose up -d --force-recreate 2>/dev/null
+            echo "[✓] 隧道与应用容器已强制重建并启动！"
+            read -p "按回车键继续..."
+            ;;
+        4)
             echo "[+] 正在检查并更新 parse-video 镜像..."
             cd "$WORK_DIR" || exit
             docker compose pull parse-video 2>/dev/null || docker-compose pull parse-video
@@ -146,17 +172,17 @@ while true; do
             echo "[✓] 项目更新完成！"
             read -p "按回车键继续..."
             ;;
-        4)
+        5)
             echo "[+] 正在重启服务..."
             cd "$WORK_DIR" && (docker compose restart 2>/dev/null || docker-compose restart)
             sleep 2
             ;;
-        5)
+        6)
             echo "[+] 正在停止服务..."
             cd "$WORK_DIR" && (docker compose stop 2>/dev/null || docker-compose stop)
             sleep 2
             ;;
-        6)
+        7)
             read -p "确认卸载并删除所有配置？[y/N]: " confirm
             if [[ "$confirm" =~ ^[Yy]$ ]]; then
                 cd "$WORK_DIR" && (docker compose down 2>/dev/null || docker-compose down)
@@ -188,7 +214,7 @@ EOF
     echo "    http://parse-video:8080"
     echo " ------------------------------------------------"
     echo " 💡 以后在终端随时输入: qsy"
-    echo "    即可呼出菜单进行查看、日志排查或在线更新！"
+    echo "    即可呼出菜单进行查看、一键重建修复或在线更新！"
     echo "=================================================="
 }
 

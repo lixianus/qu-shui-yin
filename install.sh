@@ -60,7 +60,22 @@ install_main() {
     CUSTOM_PORT=${CUSTOM_PORT:-8080}
     echo "[✓] 已选择本地端口: ${CUSTOM_PORT}"
 
-    # 5. 创建工作目录与配置文件
+    # 5. 交互式输入绑定域名（用于防封和直接访问）
+    echo ""
+    echo "--------------------------------------------------"
+    echo "请输入绑定的解析域名 (例如: parse.yourdomain.com)"
+    echo "（注：需确保该域名已托管在 Cloudflare 账号下）"
+    echo "--------------------------------------------------"
+    read -p "请输入你的绑定域名: " CUSTOM_DOMAIN
+
+    if [ -z "$CUSTOM_DOMAIN" ]; then
+        echo "[-] 提示：未输入域名，后续需手动在 CF 后台绑定 Public Hostname。"
+        CUSTOM_DOMAIN="未绑定域名"
+    else
+        echo "[✓] 已绑定域名: ${CUSTOM_DOMAIN}"
+    fi
+
+    # 6. 创建工作目录与配置文件
     mkdir -p "$WORK_DIR"
     cd "$WORK_DIR" || exit
 
@@ -91,12 +106,12 @@ networks:
     driver: bridge
 DOCKEREOF
 
-    # 6. 拉取镜像并启动
+    # 7. 拉取镜像并启动
     echo "[+] 正在拉取 Docker 镜像并启动服务..."
     docker compose down 2>/dev/null || docker-compose down 2>/dev/null
     docker compose up -d 2>/dev/null || docker-compose up -d 2>/dev/null
 
-    # 7. 创建全局快捷命令 qsy
+    # 8. 创建全局快捷命令 qsy
     cat << 'EOF' > /usr/local/bin/qsy
 #!/bin/bash
 WORK_DIR="/opt/parse-video"
@@ -167,9 +182,12 @@ EOF
     echo "=================================================="
     echo "              [!] 部署全部完成！                  "
     echo "=================================================="
-    echo " 1. 服务已成功启动，本地端口映射为: ${CUSTOM_PORT}"
-    echo " 2. Cloudflare 后台 Public Hostname 指向: http://parse-video:8080"
-    echo " 3. 以后在终端随时输入: qsy"
+    echo " 1. 本地服务映射端口: ${CUSTOM_PORT}"
+    echo " 2. 绑定的访问域名:   https://${CUSTOM_DOMAIN}"
+    echo " 3. Cloudflare 后台 Public Hostname 指向地址:"
+    echo "    http://parse-video:8080"
+    echo " ------------------------------------------------"
+    echo " 💡 以后在终端随时输入: qsy"
     echo "    即可呼出菜单进行查看、日志排查或在线更新！"
     echo "=================================================="
 }

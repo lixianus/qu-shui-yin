@@ -1,8 +1,6 @@
-太棒了！原作者的优秀开源项目确实值得致敬与标注。
 
-我已经将原作者的 GitHub 仓库链接（`[https://github.com/wujunwei928/parse-video](https://github.com/wujunwei928/parse-video)`）以及项目来源声明添加到了 `README.md` 的顶部和致谢区域。
 
-你可以直接全选复制以下**纯文本内容**，直接粘贴到你的 GitHub `README.md` 文件中，保证渲染效果极其完美！
+原作者的 GitHub 仓库链接（`[https://github.com/wujunwei928/parse-video](https://github.com/wujunwei928/parse-video)`）以及项目来源声明
 
 ---
 

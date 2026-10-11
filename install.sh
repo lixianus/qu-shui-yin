@@ -1,8 +1,31 @@
 #!/bin/bash
 
+# ==========================================
+# 智能交互自引导机制：防止管道符导致 read 输入失效
+# ==========================================
+if [ ! -t 0 ]; then
+    # 如果检测到是以管道（curl | sh）方式运行，自动下载到本地并用真实终端重新执行
+    SCRIPT_URL="https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh"
+    TEMP_SCRIPT="/tmp/install_qsy.sh"
+    
+    echo "[+] 正在引导进入平稳交互终端..."
+    curl -sL "$SCRIPT_URL" -o "$TEMP_SCRIPT" 2>/dev/null || wget -q "$SCRIPT_URL" -O "$TEMP_SCRIPT" 2>/dev/null
+    
+    # 兼容处理：消除可能存在的 Windows 换行符
+    if command -v dos2unix &> /dev/null; then
+        dos2unix "$TEMP_SCRIPT" >/dev/null 2>&1
+    else
+        tr -d '\r' < "$TEMP_SCRIPT" > "${TEMP_SCRIPT}.fixed" && mv "${TEMP_SCRIPT}.fixed" "$TEMP_SCRIPT"
+    fi
+    
+    chmod +x "$TEMP_SCRIPT"
+    exec bash "$TEMP_SCRIPT" < /dev/tty
+    exit 0
+fi
+
 # 确保以 root 权限运行
 if [ "$EUID" -ne 0 ]; then
-  echo "[-] 请使用 root 权限运行此脚本 (使用 sudo bash 或切换 root)"
+  echo "[-] 请使用 root 权限运行此脚本 (例如: sudo bash 或切换 root)"
   exit 1
 fi
 

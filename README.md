@@ -25,5 +25,10 @@
 
 在你的 VPS 终端（需具备 **Root** 权限）中，直接复制并运行以下命令：
 
+在你的 VPS 终端（需具备 Root 权限）中，直接复制并运行以下命令：
+
 ```bash
-bash <(curl -sL [https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh](https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh))
+在你的 VPS 终端（需具备 Root 权限）中，直接复制并运行以下命令：
+
+```bash
+bash <(curl -sL [https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh]

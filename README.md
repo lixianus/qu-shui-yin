@@ -16,8 +16,12 @@
 📥 一键安装命令
 在你的 Linux 服务器（Ubuntu / Debian / Alpine）上以 root 权限执行以下一行命令即可：
 
-Bash
-bash <(curl -sL [https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh](https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh) | tr -d '\r')
+## 📥 一键安装命令
+
+在你的 Linux 服务器（Ubuntu / Debian / Alpine）上以 **root** 权限执行以下一行命令即可：
+
+```bash
+bash <(curl -sL https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh | tr -d '\r')
 💡 安装过程中的交互提示：
 Cloudflare Tunnel Token：前往 Cloudflare Zero Trust 后台 -> Tunnels 复制专用的 Token 密钥。
 

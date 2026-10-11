@@ -1,3 +1,12 @@
-本项目基于原作者 wujunwei928/parse-video 开发，完美适配 NAT 小鸡（无独立公网IPv4） 或普通 VPS。通过 Docker + Cloudflare Tunnel 零端口暴露方案，实现安全、免端口映射、自带 HTTPS 的短视频去水印解析服务。   同时内置了强大的 qsy 快捷可视化管理菜单，支持状态查看、日志跟踪、在线更新与一键卸载。🚀 一键安装命令在你的 VPS 终端（Root 权限）中直接复制并运行以下命令：Bashbash <(curl -sL https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh)
-安装向导步骤：自动检查/安装 Docker：脚本会自动检测环境并安装所需的 Docker 和 Docker Compose。输入 Cloudflare Token：前往 Cloudflare Zero Trust 后台 -> Networks -> Tunnels 创建一个隧道，复制并粘贴你的 Token。设置本地端口：输入自定义的本地访问端口（NAT 小鸡可填写服务商分配给你的公网映射端口，默认回车为 8080）。绑定域名：部署完成后，去 Cloudflare 后台添加一个 Public Hostname，将你的域名指向内部服务（例如：http://parse-video:8080），即可通过 https://你的域名 安全访问。🎮 日常便捷管理 (qsy 命令)无论何时登录 VPS，你只需要在终端输入以下命令即可呼出可视化管理面板：   Bashqsy
-菜单功能概览：1. 查看容器运行状态：实时检查 parse-video 和 cloudflared 容器的运行情况。   2. 查看实时运行日志：排查错误或查看访问日志。   3. 更新解析项目：当原作者更新项目时，一键拉取最新镜像并平滑升级，绝不丢失配置。   4. 重启服务：快速重启所有相关容器。   5. 停止服务：暂停运行。   6. 卸载并清理全部配置：安全停止容器，并彻底清理相关目录与全局快捷命令。   💡 核心优势完美克服 NAT 限制：无需占用或死守服务商分配的公网入站端口，借助 Cloudflare 隧道安全穿透。自带 HTTPS 安全证书：免去繁琐的 Nginx 和 SSL 证书申请流程。数据与程序分离：更新镜像时配置和 Token 自动保留，永不丢失。
+# 🎬 Qu-Shui-Yin (短视频去水印解析一键部署工具)
+
+本项目基于原作者 [wujunwei928/parse-video](https://github.com/wujunwei928/parse-video) 开发，完美适配 **NAT 小鸡（无独立公网 IPv4）** 或普通 VPS。通过 **Docker + Cloudflare Tunnel** 零端口暴露方案，实现安全、免端口映射、自带 HTTPS 的短视频去水印解析服务。同时内置了强大的 `qsy` 快捷可视化管理菜单，支持状态查看、日志跟踪、在线更新与一键卸载。
+
+---
+
+## 🚀 一键安装命令
+
+在你的 VPS 终端（Root 权限）中直接复制并运行以下命令：
+
+```bash
+bash <(curl -sL [https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh](https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh))

@@ -96,7 +96,7 @@ install_main() {
     mkdir -p "$WORK_DIR"
     cd "$WORK_DIR" || exit
 
-    echo "[+] 正在生成 Docker Compose 配置文件..."
+    echo "[+] 正在生成 Docker Compose 配置文件（仅管理主服务）..."
     cat <<DOCKEREOF > docker-compose.yml
 services:
   parse-video:
@@ -105,30 +105,25 @@ services:
     restart: always
     ports:
       - "${CUSTOM_PORT}:8080"
-    networks:
-      - app-net
-
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    container_name: cloudflared
-    restart: always
-    command: tunnel --no-autoupdate run --token ${CF_TOKEN}
-    networks:
-      - app-net
-    depends_on:
-      - parse-video
-
-networks:
-  app-net:
-    driver: bridge
 DOCKEREOF
 
-    # 7. 拉取镜像并启动（使用强制重建确保隧道容器顺利激活）
-    echo "[+] 正在拉取 Docker 镜像并启动服务..."
+    # 7. 清理旧容器并启动主服务与独立隧道
+    echo "[+] 正在清理旧容器并启动服务..."
     docker compose down 2>/dev/null || docker-compose down 2>/dev/null
-    docker compose up -d --force-recreate 2>/dev/null || docker-compose up -d --force-recreate 2>/dev/null
+    docker rm -f parse-video cloudflared 2>/dev/null
 
-    # 8. 创建增强版全局快捷命令 qsy（内置一键修复与日志排查菜单）
+    # 启动主解析服务
+    docker compose up -d 2>/dev/null || docker-compose up -d 2>/dev/null
+
+    # 独立高可用拉起 cloudflared 隧道容器
+    echo "[+] 正在拉起 Cloudflare 隧道连接..."
+    docker run -d \
+      --name cloudflared \
+      --restart always \
+      cloudflare/cloudflared:latest \
+      tunnel --no-autoupdate run --token ${CF_TOKEN}
+
+    # 8. 创建功能完备的全局快捷命令 qsy（内置独立隧道控制与日志排查）
     cat << 'EOF' > /usr/local/bin/qsy
 #!/bin/bash
 WORK_DIR="/opt/parse-video"
@@ -138,10 +133,10 @@ while true; do
     echo "        短视频解析 (Parse-Video) 管理面板         "
     echo "=================================================="
     echo " 1. 查看容器运行状态 (docker ps)"
-    echo " 2. 查看实时运行日志 (Logs)"
-    echo " 3. 一键强制重建并修复隧道 (Force Recreate Containers)"
-    echo " 4. 更新解析项目 (Update to Latest)"
-    echo " 5. 重启服务 (Restart)"
+    echo " 2. 查看解析主服务日志 (Parse-Video Logs)"
+    echo " 3. 查看隧道连接日志 (Cloudflared Tunnel Logs)"
+    echo " 4. 一键强制重启/修复全部服务 (Restart & Fix)"
+    echo " 5. 更新解析项目 (Update to Latest)"
     echo " 6. 停止服务 (Stop)"
     echo " 7. 卸载并清理全部配置 (Uninstall)"
     echo " 0. 退出菜单"
@@ -153,18 +148,22 @@ while true; do
             read -p "按回车键继续..."
             ;;
         2)
-            echo "=== 正在查看日志 (按 Ctrl+C 退出日志) ==="
+            echo "=== 正在查看 parse-video 日志 (按 Ctrl+C 退出) ==="
             cd "$WORK_DIR" && (docker compose logs -f 2>/dev/null || docker-compose logs -f)
             ;;
         3)
-            echo "[+] 正在清理并强制重新创建容器（解决隧道未启动问题）..."
-            cd "$WORK_DIR" || exit
-            docker compose down 2>/dev/null || docker-compose down 2>/dev/null
-            docker compose up -d --force-recreate 2>/dev/null || docker-compose up -d --force-recreate 2>/dev/null
-            echo "[✓] 隧道与应用容器已强制重建并启动！"
-            read -p "按回车键继续..."
+            echo "=== 正在查看 cloudflared 隧道日志 (按 Ctrl+C 退出) ==="
+            docker logs -f cloudflared
             ;;
         4)
+            echo "[+] 正在重启并修复所有服务..."
+            cd "$WORK_DIR" || exit
+            docker compose restart 2>/dev/null || docker-compose restart 2>/dev/null
+            docker restart cloudflared 2>/dev/null
+            echo "[✓] 服务已全部重启！"
+            read -p "按回车键继续..."
+            ;;
+        5)
             echo "[+] 正在检查并更新 parse-video 镜像..."
             cd "$WORK_DIR" || exit
             docker compose pull parse-video 2>/dev/null || docker-compose pull parse-video
@@ -172,20 +171,17 @@ while true; do
             echo "[✓] 项目更新完成！"
             read -p "按回车键继续..."
             ;;
-        5)
-            echo "[+] 正在重启服务..."
-            cd "$WORK_DIR" && (docker compose restart 2>/dev/null || docker-compose restart)
-            sleep 2
-            ;;
         6)
             echo "[+] 正在停止服务..."
             cd "$WORK_DIR" && (docker compose stop 2>/dev/null || docker-compose stop)
+            docker stop cloudflared 2>/dev/null
             sleep 2
             ;;
         7)
             read -p "确认卸载并删除所有配置？[y/N]: " confirm
             if [[ "$confirm" =~ ^[Yy]$ ]]; then
                 cd "$WORK_DIR" && (docker compose down 2>/dev/null || docker-compose down)
+                docker rm -f cloudflared 2>/dev/null
                 rm -rf "$WORK_DIR"
                 rm -f /usr/local/bin/qsy
                 echo "[✓] 卸载完成，全局快捷命令已移除。"
@@ -211,10 +207,10 @@ EOF
     echo " 1. 本地服务映射端口: ${CUSTOM_PORT}"
     echo " 2. 绑定的访问域名:   https://${CUSTOM_DOMAIN}"
     echo " 3. Cloudflare 后台 Public Hostname 指向地址:"
-    echo "    http://parse-video:8080"
+    echo "    http://8.220.214.167:${CUSTOM_PORT}"
     echo " ------------------------------------------------"
     echo " 💡 以后在终端随时输入: qsy"
-    echo "    即可呼出菜单进行查看、一键重建修复或在线更新！"
+    echo "    即可呼出菜单进行独立日志查看、一键修复或更新！"
     echo "=================================================="
 }
 

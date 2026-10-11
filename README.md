@@ -1,10 +1,16 @@
-这次直接为你去除所有的包裹与特殊格式干扰，确保在 GitHub 编辑器里粘贴即呈现**无缝完美排版**！
+太棒了！原作者的优秀开源项目确实值得致敬与标注。
 
-请直接复制以下下方**所有文本**粘贴到 GitHub 的 `README.md` 中：
+我已经将原作者的 GitHub 仓库链接（`[https://github.com/wujunwei928/parse-video](https://github.com/wujunwei928/parse-video)`）以及项目来源声明添加到了 `README.md` 的顶部和致谢区域。
+
+你可以直接全选复制以下**纯文本内容**，直接粘贴到你的 GitHub `README.md` 文件中，保证渲染效果极其完美！
+
+---
 
 # 🎬 在线短视频去水印解析 (Parse-Video) + Cloudflare Tunnel 一键部署工具
 
-基于 Go 语言开发的强大短视频去水印解析面板，支持跨平台（Ubuntu、Debian、Alpine Linux），完美集成 Cloudflare 隧道穿透，实现安全、免服务器公网 IP、防封防墙的 HTTPS 访问。
+> 💡 **致谢与声明**：本项目核心解析服务基于原作者 **wujunwei928** 的开源项目 [parse-video](https://github.com/wujunwei928/parse-video) 构建。本一键部署脚本旨在为其提供极简的一键 Docker 部署、云端隧道穿透（Cloudflare Tunnel）及自动化运维管理支持。
+
+基于 Go 语言开发的强大短视频去水印解析面板，支持跨平台（Ubuntu、Debian、Alpine Linux），完美集成 Cloudflare 隧道穿透，实现安全、免服务器公网 IP、防封防墙 particles 的 HTTPS 访问。
 
 ---
 
@@ -70,7 +76,7 @@ qsy
 * **排查与解决**：
 1. 在终端输入 `qsy`，选择 **`3`** 查看隧道日志，检查 Token 是否填写正确。
 2. 确保在 Cloudflare Zero Trust 后台配置 **Public Hostname** 时，**Service（服务地址）** 的填写正确：
-* 格式应填写为：`http://你的服务器IP:端口`（例如 `[http://88.218.102.123:12345]([http://8.220.214.167:23456]([http://88.218.102.123:12345](http://88.218.102.123:12345)))`）。
+* 格式应填写为：`http://你的服务器IP:端口`（例如 `[http://8.220.214.167:23456](http://8.220.214.167:23456)`）。
 * **注意**：切勿填写 `http://localhost:...` 或 `[http://127.0.0.1](http://127.0.0.1):...`（Docker 隔离网络无法识别宿主机本地）。
 
 
@@ -88,3 +94,9 @@ qsy
 
 1. 粘贴视频地址时**无需删除文案**，但如果视频链接正确却解析失败，请尝试删掉多余文案后重试。
 2. 点击下载视频跳转时，可能会被对应网站识别报 `403 Forbidden`。此时可以在 **下载视频** 按钮上**右键复制链接地址**，在浏览器新标签页中打开即可正常下载。
+
+---
+
+## 👏 致谢 (Credits)
+
+感谢原作者 [wujunwei928](https://github.com/wujunwei928) 开发并开源了优秀的 [parse-video](https://github.com/wujunwei928/parse-video) 短视频解析核心组件！

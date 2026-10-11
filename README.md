@@ -23,3 +23,57 @@
 
 ```bash
 bash <(curl -sL https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh | tr -d '\r')
+
+💡 安装过程中的交互提示：
+Cloudflare Tunnel Token：前往 Cloudflare Zero Trust 后台 -> Tunnels 复制专用的 Token 密钥。
+
+自定义本地端口：设置容器映射端口（默认 8080，NAT 小鸡可填写服务商分配的公网映射端口）。
+
+绑定访问域名：输入你的专属解析域名（例如 qsy.keaiduo.kdns.fr，需托管在 Cloudflare 账号下）。
+
+🧰 全局日常管理命令
+安装完成后，在任意终端输入全局快捷命令即可呼出管理面板：
+
+Bash
+qsy
+面板功能菜单：
+
+1 - 查看容器运行状态 (docker ps)
+
+2 - 查看解析主服务日志 (parse-video logs)
+
+3 - 查看隧道连接日志 (cloudflared logs)
+
+4 - 一键强制重启/修复全部服务 (Restart & Fix)
+
+5 - 更新解析项目到最新版 (Update to Latest)
+
+6 - 停止全部服务 (Stop)
+
+7 - 卸载并清理全部配置 (Uninstall)
+
+0 - 退出菜单
+
+⚠️ 常见排查与避坑指南（FAQ）
+1. 访问网页提示 Error 1033 (Cloudflare Tunnel error)？
+原因：Cloudflare 边缘节点无法连接到本地的 cloudflared 隧道客户端。
+
+排查与解决：
+
+在终端输入 qsy，选择 3 查看隧道日志，检查 Token 是否填写正确。
+
+确保在 Cloudflare Zero Trust 后台配置 Public Hostname 时，Service（服务地址） 的填写正确：
+
+格式应填写为：http://你的服务器IP:端口（例如 http://8.220.214.167:23456）。
+
+注意：切勿填写 http://localhost:... 或 http://127.0.0.1:...（Docker 隔离网络无法识别宿主机本地）。
+
+2. 执行脚本时提示 /dev/fd/xx: line ... $\r': command not found？
+原因：由于在 Windows 环境下编辑或保存了 .sh 脚本，导致文件被沾染了隐藏的 Windows 换行符（CRLF）。
+
+解决：安装命令中已经强制加入了 | tr -d '\r' 管道清洗，请确保复制的是带有清洗逻辑的标准一键命令。
+
+📌 温馨提示
+粘贴视频地址时无需删除文案，但如果视频链接正确却解析失败，请尝试删掉多余文案后重试。
+
+点击下载视频跳转时，可能会被对应网站识别报 403 Forbidden。此时可以在 下载视频 按钮上右键复制链接地址，在浏览器新标签页中打开即可正常下载。

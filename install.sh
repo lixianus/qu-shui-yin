@@ -1,26 +1,4 @@
 #!/bin/bash
-# ==========================================
-# 终极防崩溃自引导：自动抵抗 Windows 换行符并接管终端
-# ==========================================
-if [ -t 0 ] && [ -z "$_QSY_RE-EXEC" ]; then
-    # 如果当前终端有输入权限且未重定向，检查并自洁换行符
-    if grep -q -U $'\r' "$0" 2>/dev/null || file "$0" 2>/dev/null | grep -q "CRLF"; then
-        export _QSY_RE-EXEC=1
-        tr -d '\r' < "$0" > "$0.clean" && exec bash "$0.clean" "$@"
-    fi
-elif [ ! -t 0 ]; then
-    # 如果是通过 curl | bash 或管道运行，自动下载到临时文件清洗并转入真实终端
-    _TEMP_SH="/tmp/qsy_install_$$.sh"
-    curl -sL "https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh" -o "$_TEMP_SH" 2>/dev/null || wget -q "https://raw.githubusercontent.com/lixianus/qu-shui-yin/refs/heads/main/install.sh" -O "$_TEMP_SH" 2>/dev/null
-    tr -d '\r' < "$_TEMP_SH" > "${_TEMP_SH}.clean"
-    chmod +x "${_TEMP_SH}.clean"
-    exec bash "${_TEMP_SH}.clean" < /dev/tty
-    exit 0
-fi
-
-# ==========================================
-# 正式安装逻辑开始
-# ==========================================
 
 # 确保以 root 权限运行
 if [ "$EUID" -ne 0 ]; then
